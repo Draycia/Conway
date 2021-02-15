@@ -7,12 +7,14 @@ import net.draycia.conway.Conway
 object DesktopLauncher {
     @JvmStatic
     fun main(arg: Array<String>) {
+        // TODO: let user configure target framerate
+        // TODO: auto size window based on grid size
         val config = LwjglApplicationConfiguration().apply {
             title = "Conway"
             width = 512
             height = 512
-            backgroundFPS = 2
-            foregroundFPS = 2
+            backgroundFPS = 60
+            foregroundFPS = 60
             resizable = false
         }
 

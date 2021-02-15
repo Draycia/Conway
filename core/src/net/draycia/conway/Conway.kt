@@ -17,13 +17,14 @@ class Conway : ApplicationAdapter() {
     lateinit var terminalData: KTerminalData
     lateinit var terminalRenderer: KTerminalRenderer
 
+    // TODO: let user configure grid size
     var width = 32
     var height = 32
 
     private val seed = Random.nextInt()
     private val noise = CubicNoise(seed, 1)
 
-    private var matrix = Matrix2Df(32, 32)
+    private var matrix = Matrix2Df(width, height)
 
     override fun create() {
         batch = SpriteBatch()
@@ -77,7 +78,7 @@ class Conway : ApplicationAdapter() {
      * 3) All other live cells die in the next generation. Similarly, all other dead cells stay dead.
      */
     private fun updateCells() {
-        val nextGeneration = Matrix2Df(32, 32)
+        val nextGeneration = Matrix2Df(width, height)
 
         for (x in 0 until matrix.nx) {
             for (y in 0 until matrix.ny) {
