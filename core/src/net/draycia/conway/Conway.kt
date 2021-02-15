@@ -9,43 +9,56 @@ import com.halfdeadgames.kterminal.KTerminalRenderer
 import ktx.graphics.use
 import net.draycia.conway.math.CubicNoise
 import net.draycia.conway.math.Matrix2Df
+import java.util.*
+import kotlin.concurrent.timerTask
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
 class Conway : ApplicationAdapter() {
+    // Terminal renderer stuff
     lateinit var batch: SpriteBatch
     lateinit var terminalData: KTerminalData
     lateinit var terminalRenderer: KTerminalRenderer
 
     // TODO: let user configure grid size
+    // Cell grid size
     var width = 32
     var height = 32
 
+    // Noise generation
     private val seed = Random.nextInt()
-    private val noise = CubicNoise(seed, 1)
+    private val noise = CubicNoise(seed, 1) // magic number
 
+    // Cell grid
     private var matrix = Matrix2Df(width, height)
 
+    /**
+     * Called when the application starts.
+     */
     override fun create() {
         batch = SpriteBatch()
-        // the width and height in characters of the display
         terminalData = KTerminalData(width, height, Color.WHITE.toFloatBits(), Color.BLACK.toFloatBits())
         terminalRenderer = KTerminalRenderer(batch, "fontSheet.png")
 
         noise.populate(matrix)
+
+        // Schedule a 1 second repeating task to update the cells
+        Timer().scheduleAtFixedRate(timerTask {
+            updateCells()
+        }, 1000L, 1000L)
     }
 
+    /**
+     * Called each frame.
+     * Clears the screen and then starts the rendering process.
+     */
     override fun render() {
-        // Clear the screen, otherwise you get the repeating effect when you Out Of Bounds in some games
+        // Clear the screen
         ScreenUtils.clear(1f, 0f, 0f, 1f)
-        // And reset the terminal data
-        terminalData.clearAll()
-        terminalData.resetCursor()
 
-        // Begin do stuff
-        updateCells()
+        // Write the matrix to the terminal renderer
+        // The Conway rules are applied to the cells elsewhere, in the create method
         writeMatrix()
-        // Stop do stuff
 
         // Render the terminal data
         batch.use {
@@ -53,6 +66,10 @@ class Conway : ApplicationAdapter() {
         }
     }
 
+    /**
+     * Called when the terminal/window/etc are closed/terminated.
+     * General application cleanup
+     */
     override fun dispose() {
         batch.dispose()
     }
