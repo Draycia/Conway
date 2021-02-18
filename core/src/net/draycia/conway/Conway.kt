@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.ScreenUtils
 import com.halfdeadgames.kterminal.KTerminalData
+import com.halfdeadgames.kterminal.KTerminalGlyph
 import com.halfdeadgames.kterminal.KTerminalRenderer
 import ktx.graphics.use
 import net.draycia.conway.math.CubicNoise
@@ -14,38 +15,35 @@ import kotlin.concurrent.timerTask
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-class Conway : ApplicationAdapter() {
+class Conway(private val settings: ConwaySettings) : ApplicationAdapter() {
     // Terminal renderer stuff
     lateinit var batch: SpriteBatch
     lateinit var terminalData: KTerminalData
     lateinit var terminalRenderer: KTerminalRenderer
-
-    // TODO: let user configure grid size
-    // Cell grid size
-    var width = 32
-    var height = 32
 
     // Noise generation
     private val seed = Random.nextInt()
     private val noise = CubicNoise(seed, 1) // magic number
 
     // Cell grid
-    private var matrix = Matrix2Df(width, height)
+    private var matrix = Matrix2Df(settings.width, settings.height)
 
     /**
      * Called when the application starts.
      */
     override fun create() {
         batch = SpriteBatch()
-        terminalData = KTerminalData(width, height, Color.WHITE.toFloatBits(), Color.BLACK.toFloatBits())
+        terminalData = KTerminalData(settings.width, settings.height, settings.fgColour.toFloatBits(), settings.bgColour.toFloatBits())
         terminalRenderer = KTerminalRenderer(batch, "fontSheet.png")
 
         noise.populate(matrix)
 
         // Schedule a 1 second repeating task to update the cells
+        // TODO: sleep a variable amount depending on how long the tick itself took
+        // We want each tick to happen at the rate
         Timer().scheduleAtFixedRate(timerTask {
             updateCells()
-        }, 1000L, 1000L)
+        }, 5000L, 1000L / settings.ticksPerSecond)
     }
 
     /**
@@ -79,9 +77,9 @@ class Conway : ApplicationAdapter() {
      */
     private fun getCellDisplay(x: Int, y: Int, matrix: Matrix2Df): Char {
         return if (matrix[x, y].roundToInt() == 1) {
-            '@'
+            settings.livingCellChar
         } else {
-            ' '
+            settings.deadCellChar
         }
     }
 
@@ -95,7 +93,7 @@ class Conway : ApplicationAdapter() {
      * 3) All other live cells die in the next generation. Similarly, all other dead cells stay dead.
      */
     private fun updateCells() {
-        val nextGeneration = Matrix2Df(width, height)
+        val nextGeneration = Matrix2Df(settings.width, settings.height)
 
         for (x in 0 until matrix.nx) {
             for (y in 0 until matrix.ny) {
